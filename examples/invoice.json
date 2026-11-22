@@ -1,0 +1,42 @@
+{
+  "number": "RE-2027-0042",
+  "issue_date": "2027-01-15",
+  "due_date": "2027-01-29",
+  "currency": "EUR",
+  "buyer_reference": "04011000-12345-34",
+  "seller": {
+    "name": "Muster Design Studio",
+    "street": "Lindenstraße 12",
+    "postcode": "10115",
+    "city": "Berlin",
+    "country": "DE",
+    "vat_id": "DE123456788",
+    "email": "rechnung@muster-design.example",
+    "contact_name": "Mia Muster",
+    "phone": "+49 30 1234567"
+  },
+  "buyer": {
+    "name": "Stadtverwaltung Musterstadt",
+    "street": "Rathausplatz 1",
+    "postcode": "12345",
+    "city": "Musterstadt",
+    "country": "DE",
+    "email": "eingang@musterstadt.example",
+    "endpoint_id": "04011000-12345-34",
+    "endpoint_scheme": "0204"
+  },
+  "payment": {
+    "means_code": "58",
+    "iban": "DE02120300000000202051"
+  },
+  "lines": [
+    {
+      "name": "Webdesign",
+      "quantity": 12.5,
+      "unit_code": "HUR",
+      "price": 85,
+      "vat_category": "S",
+      "vat_rate": 19
+    }
+  ]
+}

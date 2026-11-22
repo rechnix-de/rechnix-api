@@ -1,0 +1,952 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Rechnix API",
+    "version": "1.0.0",
+    "description": "Validate, convert and create EU e-invoices (XRechnung, ZUGFeRD/Factur-X, Peppol BIS) and check IBANs and EU VAT IDs. Invoices are processed in memory and never stored."
+  },
+  "servers": [
+    {
+      "url": "https://rechnix-api.mbanzagroup.workers.dev"
+    }
+  ],
+  "security": [
+    {
+      "ApiKey": []
+    }
+  ],
+  "paths": {
+    "/v1/validate": {
+      "post": {
+        "summary": "Validate an e-invoice",
+        "operationId": "validate",
+        "parameters": [
+          {
+            "name": "profile",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "auto",
+                "xrechnung",
+                "en16931",
+                "peppol"
+              ],
+              "default": "auto"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en",
+                "de",
+                "fr"
+              ],
+              "default": "en"
+            },
+            "description": "Language of messages"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/xml": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "application/pdf": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "xml": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "xml"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Validation report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Report"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/convert": {
+      "post": {
+        "summary": "Convert an e-invoice to another format",
+        "operationId": "convert",
+        "parameters": [
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "xrechnung-cii",
+                "xrechnung-ubl",
+                "peppol-ubl",
+                "en16931-cii",
+                "zugferd-xml",
+                "zugferd-pdf",
+                "json"
+              ]
+            }
+          },
+          {
+            "name": "strict",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Refuse if the result breaks the target format rules"
+          },
+          {
+            "name": "pdf_lang",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "de",
+                "en",
+                "fr"
+              ]
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en",
+                "de",
+                "fr"
+              ],
+              "default": "en"
+            },
+            "description": "Language of messages"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/xml": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "application/pdf": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "xml": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "xml"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Invoice in the requested format",
+            "content": {
+              "application/xml": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invoice"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/invoices": {
+      "post": {
+        "summary": "Create an e-invoice from JSON",
+        "operationId": "createInvoice",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "xrechnung-cii",
+                "xrechnung-ubl",
+                "peppol-ubl",
+                "en16931-cii",
+                "zugferd-xml",
+                "zugferd-pdf",
+                "json"
+              ],
+              "default": "xrechnung-cii"
+            }
+          },
+          {
+            "name": "skip_validation",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "pdf_lang",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "de",
+                "en",
+                "fr"
+              ]
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en",
+                "de",
+                "fr"
+              ],
+              "default": "en"
+            },
+            "description": "Language of messages"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Invoice"
+              },
+              "example": {
+                "number": "RE-2027-0042",
+                "issue_date": "2027-01-15",
+                "due_date": "2027-01-29",
+                "currency": "EUR",
+                "buyer_reference": "04011000-12345-34",
+                "seller": {
+                  "name": "Muster Design Studio",
+                  "street": "Lindenstraße 12",
+                  "postcode": "10115",
+                  "city": "Berlin",
+                  "country": "DE",
+                  "vat_id": "DE123456788",
+                  "email": "rechnung@muster-design.example",
+                  "contact_name": "Mia Muster",
+                  "phone": "+49 30 1234567"
+                },
+                "buyer": {
+                  "name": "Stadtverwaltung Musterstadt",
+                  "street": "Rathausplatz 1",
+                  "postcode": "12345",
+                  "city": "Musterstadt",
+                  "country": "DE",
+                  "email": "eingang@musterstadt.example",
+                  "endpoint_id": "04011000-12345-34",
+                  "endpoint_scheme": "0204"
+                },
+                "payment": {
+                  "means_code": "58",
+                  "iban": "DE02120300000000202051"
+                },
+                "lines": [
+                  {
+                    "name": "Webdesign",
+                    "quantity": 12.5,
+                    "unit_code": "HUR",
+                    "price": 85,
+                    "vat_category": "S",
+                    "vat_rate": 19
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Invoice in the requested format",
+            "content": {
+              "application/xml": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invoice"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/iban/{iban}": {
+      "get": {
+        "summary": "Check an IBAN",
+        "operationId": "checkIban",
+        "parameters": [
+          {
+            "name": "iban",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "DE02120300000000202051"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "IBAN check",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/vat/{vat_id}": {
+      "get": {
+        "summary": "Check an EU VAT ID (offline + VIES)",
+        "operationId": "checkVat",
+        "parameters": [
+          {
+            "name": "vat_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "DE123456788"
+          },
+          {
+            "name": "vies",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "VAT ID check",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/vat/batch": {
+      "post": {
+        "summary": "Check up to 100 VAT IDs",
+        "operationId": "checkVatBatch",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "vat_ids"
+                ],
+                "properties": {
+                  "vat_ids": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "vies": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/usage": {
+      "get": {
+        "summary": "Calls used and left this period",
+        "operationId": "usage",
+        "responses": {
+          "200": {
+            "description": "Usage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "plan": {
+                      "type": "string"
+                    },
+                    "period": {
+                      "type": "string"
+                    },
+                    "used": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "remaining": {
+                      "type": "integer",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Issue"
+            }
+          }
+        }
+      },
+      "Issue": {
+        "type": "object",
+        "properties": {
+          "rule": {
+            "type": "string",
+            "example": "BR-DE-15"
+          },
+          "field": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "Report": {
+        "type": "object",
+        "properties": {
+          "valid": {
+            "type": "boolean"
+          },
+          "syntax": {
+            "type": "string",
+            "enum": [
+              "CII",
+              "UBL"
+            ]
+          },
+          "profile": {
+            "type": "string"
+          },
+          "specification_id": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "xml",
+              "pdf"
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Issue"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Issue"
+            }
+          },
+          "summary": {
+            "type": "object"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "Invoice": {
+        "type": "object",
+        "required": [
+          "number",
+          "issue_date",
+          "seller",
+          "buyer",
+          "lines"
+        ],
+        "properties": {
+          "number": {
+            "type": "string"
+          },
+          "issue_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "type_code": {
+            "type": "string",
+            "default": "380"
+          },
+          "currency": {
+            "type": "string",
+            "default": "EUR"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "delivery_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "buyer_reference": {
+            "type": "string"
+          },
+          "order_reference": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "payment_terms": {
+            "type": "string"
+          },
+          "prepaid": {
+            "type": "number"
+          },
+          "seller": {
+            "type": "object",
+            "required": [
+              "name",
+              "country"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "street": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              },
+              "postcode": {
+                "type": "string"
+              },
+              "country": {
+                "type": "string"
+              },
+              "vat_id": {
+                "type": "string"
+              },
+              "tax_number": {
+                "type": "string"
+              },
+              "legal_id": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "contact_name": {
+                "type": "string"
+              },
+              "phone": {
+                "type": "string"
+              },
+              "endpoint_id": {
+                "type": "string"
+              },
+              "endpoint_scheme": {
+                "type": "string"
+              }
+            }
+          },
+          "buyer": {
+            "type": "object",
+            "required": [
+              "name",
+              "country"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "street": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              },
+              "postcode": {
+                "type": "string"
+              },
+              "country": {
+                "type": "string"
+              },
+              "vat_id": {
+                "type": "string"
+              },
+              "tax_number": {
+                "type": "string"
+              },
+              "legal_id": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "contact_name": {
+                "type": "string"
+              },
+              "phone": {
+                "type": "string"
+              },
+              "endpoint_id": {
+                "type": "string"
+              },
+              "endpoint_scheme": {
+                "type": "string"
+              }
+            }
+          },
+          "payment": {
+            "type": "object",
+            "properties": {
+              "means_code": {
+                "type": "string",
+                "default": "58"
+              },
+              "iban": {
+                "type": "string"
+              },
+              "bic": {
+                "type": "string"
+              },
+              "account_name": {
+                "type": "string"
+              }
+            }
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "quantity",
+                "price"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "type": "number"
+                },
+                "unit_code": {
+                  "type": "string",
+                  "default": "C62"
+                },
+                "price": {
+                  "type": "number"
+                },
+                "vat_category": {
+                  "type": "string",
+                  "enum": [
+                    "S",
+                    "Z",
+                    "E",
+                    "AE",
+                    "K",
+                    "G",
+                    "O"
+                  ],
+                  "default": "S"
+                },
+                "vat_rate": {
+                  "type": "number"
+                },
+                "exemption_reason": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,309 @@
+{
+  "info": {
+    "name": "Rechnix API – EU e-invoices (XRechnung, ZUGFeRD, Peppol)",
+    "description": "Create, validate and convert EU e-invoices. Free plan: 100 calls/month. Docs: https://rechnix-api.mbanzagroup.workers.dev/ . The demo key works for 30 calls/day per IP; get your own free key on the docs page.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://rechnix-api.mbanzagroup.workers.dev"
+    },
+    {
+      "key": "apiKey",
+      "value": "demo"
+    }
+  ],
+  "item": [
+    {
+      "name": "Create XRechnung (CII) from JSON",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{apiKey}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/v1/invoices?format=xrechnung-cii",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "invoices"
+          ],
+          "query": [
+            {
+              "key": "format",
+              "value": "xrechnung-cii"
+            }
+          ]
+        },
+        "description": "Returns a valid XRechnung 3.0 CII XML. Other formats: xrechnung-ubl, peppol-ubl, en16931-cii, zugferd-xml, zugferd-pdf, json.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"number\": \"RE-2027-0042\",\n  \"issue_date\": \"2027-01-15\",\n  \"due_date\": \"2027-01-29\",\n  \"currency\": \"EUR\",\n  \"buyer_reference\": \"04011000-12345-34\",\n  \"seller\": {\n    \"name\": \"Muster Design Studio\",\n    \"street\": \"Lindenstraße 12\",\n    \"postcode\": \"10115\",\n    \"city\": \"Berlin\",\n    \"country\": \"DE\",\n    \"vat_id\": \"DE123456788\",\n    \"email\": \"rechnung@muster-design.example\",\n    \"contact_name\": \"Mia Muster\",\n    \"phone\": \"+49 30 1234567\"\n  },\n  \"buyer\": {\n    \"name\": \"Stadtverwaltung Musterstadt\",\n    \"street\": \"Rathausplatz 1\",\n    \"postcode\": \"12345\",\n    \"city\": \"Musterstadt\",\n    \"country\": \"DE\",\n    \"email\": \"eingang@musterstadt.example\",\n    \"endpoint_id\": \"04011000-12345-34\",\n    \"endpoint_scheme\": \"0204\"\n  },\n  \"payment\": {\n    \"means_code\": \"58\",\n    \"iban\": \"DE02120300000000202051\"\n  },\n  \"lines\": [\n    {\n      \"name\": \"Webdesign\",\n      \"quantity\": 12.5,\n      \"unit_code\": \"HUR\",\n      \"price\": 85,\n      \"vat_category\": \"S\",\n      \"vat_rate\": 19\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Create ZUGFeRD / Factur-X PDF from JSON",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{apiKey}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/v1/invoices?format=zugferd-pdf&pdf_lang=de",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "invoices"
+          ],
+          "query": [
+            {
+              "key": "format",
+              "value": "zugferd-pdf"
+            },
+            {
+              "key": "pdf_lang",
+              "value": "de"
+            }
+          ]
+        },
+        "description": "Returns a PDF/A-3 with embedded factur-x.xml (EN 16931).",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"number\": \"RE-2027-0042\",\n  \"issue_date\": \"2027-01-15\",\n  \"due_date\": \"2027-01-29\",\n  \"currency\": \"EUR\",\n  \"buyer_reference\": \"04011000-12345-34\",\n  \"seller\": {\n    \"name\": \"Muster Design Studio\",\n    \"street\": \"Lindenstraße 12\",\n    \"postcode\": \"10115\",\n    \"city\": \"Berlin\",\n    \"country\": \"DE\",\n    \"vat_id\": \"DE123456788\",\n    \"email\": \"rechnung@muster-design.example\",\n    \"contact_name\": \"Mia Muster\",\n    \"phone\": \"+49 30 1234567\"\n  },\n  \"buyer\": {\n    \"name\": \"Stadtverwaltung Musterstadt\",\n    \"street\": \"Rathausplatz 1\",\n    \"postcode\": \"12345\",\n    \"city\": \"Musterstadt\",\n    \"country\": \"DE\",\n    \"email\": \"eingang@musterstadt.example\",\n    \"endpoint_id\": \"04011000-12345-34\",\n    \"endpoint_scheme\": \"0204\"\n  },\n  \"payment\": {\n    \"means_code\": \"58\",\n    \"iban\": \"DE02120300000000202051\"\n  },\n  \"lines\": [\n    {\n      \"name\": \"Webdesign\",\n      \"quantity\": 12.5,\n      \"unit_code\": \"HUR\",\n      \"price\": 85,\n      \"vat_category\": \"S\",\n      \"vat_rate\": 19\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Validate an e-invoice (XML)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{apiKey}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/xml"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/v1/validate?profile=xrechnung&lang=de",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "validate"
+          ],
+          "query": [
+            {
+              "key": "profile",
+              "value": "xrechnung"
+            },
+            {
+              "key": "lang",
+              "value": "de"
+            }
+          ]
+        },
+        "description": "Runs the official CEN EN 16931 1.3.16 + KoSIT XRechnung 3.0.2 rules. Profiles: xrechnung, en16931, peppol. Messages in en/de/fr.",
+        "body": {
+          "mode": "raw",
+          "raw": "<!-- paste an XRechnung / ZUGFeRD XML here -->",
+          "options": {
+            "raw": {
+              "language": "xml"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Convert CII to UBL",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{apiKey}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/xml"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/v1/convert?to=xrechnung-ubl",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "convert"
+          ],
+          "query": [
+            {
+              "key": "to",
+              "value": "xrechnung-ubl"
+            }
+          ]
+        },
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "<!-- paste a CII XML here -->",
+          "options": {
+            "raw": {
+              "language": "xml"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Check IBAN",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{apiKey}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/v1/iban/DE02120300000000202051",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "iban",
+            "DE02120300000000202051"
+          ]
+        },
+        "description": ""
+      }
+    },
+    {
+      "name": "Check EU VAT ID (VIES)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{apiKey}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/v1/vat/DE811569869?vies=true",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "vat",
+            "DE811569869"
+          ],
+          "query": [
+            {
+              "key": "vies",
+              "value": "true"
+            }
+          ]
+        },
+        "description": ""
+      }
+    },
+    {
+      "name": "Check VAT IDs in batch",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{apiKey}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/v1/vat/batch",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "vat",
+            "batch"
+          ]
+        },
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ids\": [\n    \"DE811569869\",\n    \"ATU13585627\",\n    \"FR40303265045\"\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Usage this month",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{apiKey}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/v1/usage",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "usage"
+          ]
+        },
+        "description": ""
+      }
+    }
+  ]
+}
